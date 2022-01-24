@@ -34,7 +34,7 @@ public class Blinky : MonoBehaviour {
     float timeLeft;
 
     private bool activePowerUp;
-    private float powerUpDuration = 30.0f;
+    private float powerUpDuration = 20.0f;
 
     private int totalActivePowerUps = 4;
 

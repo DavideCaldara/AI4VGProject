@@ -1,5 +1,6 @@
 /* Inky Behavior
- * chase mode -> ??
+ * chase mode -> His target is relative to both Blinky and Pac-Man. The destination is obtained 
+ * rotating by 180 degress the vector from Blinky position to Pacman's FrontWaypoint.
  * flee mode (powerup active) -> patrol around bottom right corner of 
  * the maze (blue dots path)
 */
@@ -7,6 +8,7 @@
 using System.Collections;
 using UnityEngine.AI;
 using UnityEngine;
+using System;
 
 [RequireComponent(typeof(NavMeshAgent))]
 
@@ -34,7 +36,7 @@ public class Inky : MonoBehaviour
     float timeLeft;
 
     private bool activePowerUp;
-    private float powerUpDuration = 30.0f;
+    private float powerUpDuration = 20.0f;
 
     private int totalActivePowerUps = 4;
 
@@ -129,17 +131,34 @@ public class Inky : MonoBehaviour
         return false;
     }
 
+    Vector3 BlinkyPos;
+    Vector3 WaypointPos;
 
     // Behaviors Coroutines
     private IEnumerator GoChase()
     {
         while (true)
         {
-            // TODO
-            //GetComponent<NavMeshAgent>().destination = destination.position;
-            //yield return new WaitForSeconds(resampleTime);
+            BlinkyPos = GameObject.Find("Blinky").transform.position;
+            WaypointPos = GameObject.Find("FrontWaypoint").transform.position;
+            GetComponent<NavMeshAgent>().destination = CalculateInkyDestination(BlinkyPos, WaypointPos);
+            yield return new WaitForSeconds(resampleTime);
         }
     }
+
+    private Vector3 CalculateInkyDestination(Vector3 blinkyPos, Vector3 waypointPos)
+    {
+        //switch to 2D (x, z) cause player and ghosts are on the same plane
+        Vector2 BlinkyPos = new Vector2(blinkyPos.x, blinkyPos.z);
+        Vector2 WaypointPos = new Vector2(waypointPos.x, waypointPos.z); //center of mirroring
+
+        float d = Vector2.Distance(BlinkyPos, WaypointPos);
+        Vector2 versor = ((BlinkyPos - WaypointPos) / d).normalized;
+        Vector2 result = WaypointPos - (versor * d);
+
+        return new Vector3(result.x, GameObject.Find("Blinky").transform.position.y, result.y);
+    }
+
     private IEnumerator GoFlee()
     {
         while (true)
