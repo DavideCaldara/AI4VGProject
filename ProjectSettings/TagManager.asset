@@ -9,6 +9,7 @@ TagManager:
   - ClydeWaypoints
   - InkyWaypoints
   - PinkyWaypoints
+  - Collectible
   layers:
   - Default
   - TransparentFX

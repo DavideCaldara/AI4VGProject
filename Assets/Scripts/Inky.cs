@@ -14,16 +14,9 @@ using System;
 
 public class Inky : MonoBehaviour
 {
-    // Start is called before the first frame update
-
-    public string targetTag = "Player";
-    public string poweruptag = "PowerUpTag";
 
     private FSM fsm;
     public Transform destination;
-    public float reactionTime = 3f;
-    public float resampleTime = 5f;
-    public float FleeTimer;
 
     private IEnumerator coroutine;
 
@@ -31,14 +24,18 @@ public class Inky : MonoBehaviour
     public float waypointTolerance = 1f;
     System.Random random = new System.Random();
     int nextWaypointIndex;
-    private float fleeResampleTime = .2f;
 
     float timeLeft;
 
-    private bool activePowerUp;
-    private float powerUpDuration = 20.0f;
+    Color temp;
 
+    private float nextActionTime = 0.0f;
+    private float period = 0.3f;
+
+    private bool activePowerUp;
     private int totalActivePowerUps = 4;
+
+    [SerializeField] private GameObject GameOverUI;
 
 
     void Start()
@@ -71,10 +68,50 @@ public class Inky : MonoBehaviour
             i++;
         }
 
-        activePowerUp = false;
-
         nextWaypointIndex = random.Next(7);
 
+        temp = GetComponent<Renderer>().material.color;
+
+        activePowerUp = false;
+
+    }
+
+    private void Update()
+    {
+        if (Time.time > nextActionTime)
+        {
+            nextActionTime += period;
+
+            if (activePowerUp) // alarm effect
+            {
+                if (GetComponent<Renderer>().material.color == temp)
+                    GetComponent<Renderer>().material.SetColor("_Color", Color.blue);
+                else
+                    GetComponent<Renderer>().material.SetColor("_Color", temp);
+            }
+            else
+            {
+                GetComponent<Renderer>().material.SetColor("_Color", temp);
+            }
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "Player" && activePowerUp)
+        {
+            this.gameObject.SetActive(false);
+        }
+        if (other.tag == "Player" && !activePowerUp)
+        {
+            GameOver();
+        }
+    }
+
+    private void GameOver()
+    {
+        Time.timeScale = 0f;
+        GameOverUI.SetActive(true);
     }
 
     // Periodic update, run forever
@@ -83,7 +120,7 @@ public class Inky : MonoBehaviour
         while (true)
         {
             fsm.Update();
-            yield return new WaitForSeconds(reactionTime);
+            yield return new WaitForSeconds(PlayerController.reactionTime);
         }
     }
 
@@ -93,7 +130,7 @@ public class Inky : MonoBehaviour
     {
         // I check for the powerup to be collected, if one is missing fire transition
         int count = 0;
-        foreach (GameObject go in GameObject.FindGameObjectsWithTag(poweruptag))
+        foreach (GameObject go in GameObject.FindGameObjectsWithTag(PlayerController.poweruptag))
         {
             if (go.activeSelf)
             { //count how many powerups are still active
@@ -107,8 +144,8 @@ public class Inky : MonoBehaviour
         }
         else
         { // one has been collected
-            totalActivePowerUps--; //update current active powerups
             print("power up collected, state transition to flee");
+            totalActivePowerUps--;
             StopCoroutine(coroutine);
             coroutine = null;
             return true;
@@ -120,7 +157,7 @@ public class Inky : MonoBehaviour
     public bool Timer()
     {
         //print("condizione verificata, torno a stato chase");
-        timeLeft -= (Time.deltaTime + reactionTime);
+        timeLeft -= (Time.deltaTime + PlayerController.reactionTime);
         print(timeLeft);
         if (timeLeft < 0)
         {
@@ -142,7 +179,7 @@ public class Inky : MonoBehaviour
             BlinkyPos = GameObject.Find("Blinky").transform.position;
             WaypointPos = GameObject.Find("FrontWaypoint").transform.position;
             GetComponent<NavMeshAgent>().destination = CalculateInkyDestination(BlinkyPos, WaypointPos);
-            yield return new WaitForSeconds(resampleTime);
+            yield return new WaitForSeconds(PlayerController.resampleTime);
         }
     }
 
@@ -166,7 +203,7 @@ public class Inky : MonoBehaviour
             Vector3 nextWaypointPosition = waypoints[nextWaypointIndex].position;
             GetComponent<NavMeshAgent>().destination = nextWaypointPosition;
             CycleWaypointWhenClose(nextWaypointPosition);
-            yield return new WaitForSeconds(fleeResampleTime);
+            yield return new WaitForSeconds(PlayerController.fleeResampleTime);
         }
     }
 
@@ -198,7 +235,7 @@ public class Inky : MonoBehaviour
         activePowerUp = true;
         coroutine = GoFlee();
         StartCoroutine(coroutine); //Blinky Beahvior when fleeing, top right corner patrol
-        timeLeft = powerUpDuration; //powerup 20 seconds
+        timeLeft = PlayerController.powerUpDuration; //powerup 20 seconds
     }
 
 

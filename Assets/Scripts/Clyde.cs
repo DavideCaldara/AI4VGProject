@@ -13,35 +13,34 @@ using UnityEngine;
 
 public class Clyde : MonoBehaviour
 {
-    // Start is called before the first frame update
-
-    public string targetTag = "Player";
-    public string poweruptag = "PowerUpTag";
-
+   
     private FSM fsm;
     public Transform destination;
-    public float reactionTime = 3f;
-    public float resampleTime = 5f;
-    public float FleeTimer;
-
+    
     private IEnumerator coroutine;
 
     Transform[] waypoints = new Transform[6];
     public float waypointTolerance = 1f;
     System.Random random = new System.Random();
     int nextWaypointIndex;
-    private float fleeResampleTime = .2f;
+    
     private float runResampleTime = .2f;
 
     float timeLeft;
-
-    private bool activePowerUp;
-    private float powerUpDuration = 20.0f;
-
-    private int totalActivePowerUps = 4;
+    
     private float maxDistance = 10f;
 
     NavMeshAgent agent;
+
+    private float nextActionTime = 0.0f;
+    private float period = 0.3f;
+
+    private bool activePowerUp;
+    private int totalActivePowerUps = 4;
+
+    Color temp;
+
+    [SerializeField] private GameObject GameOverUI;
 
     void Start()
     {
@@ -81,11 +80,52 @@ public class Clyde : MonoBehaviour
             i++;
         }
 
-        activePowerUp = false;
 
         nextWaypointIndex = random.Next(6);
         agent = GetComponent<NavMeshAgent>();
 
+        temp = GetComponent<Renderer>().material.color;
+
+        activePowerUp = false;
+
+    }
+
+    private void Update()
+    {
+        if (Time.time > nextActionTime)
+        {
+            nextActionTime += period;
+
+            if (activePowerUp) // alarm effect
+            {
+                if (GetComponent<Renderer>().material.color == temp)
+                    GetComponent<Renderer>().material.SetColor("_Color", Color.blue);
+                else
+                    GetComponent<Renderer>().material.SetColor("_Color", temp);
+            }
+            else
+            {
+                GetComponent<Renderer>().material.SetColor("_Color", temp);
+            }
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "Player" && activePowerUp)
+        {
+            this.gameObject.SetActive(false);
+        }
+        if (other.tag == "Player" && !activePowerUp)
+        {
+            GameOver();
+        }
+    }
+
+    private void GameOver()
+    {
+        Time.timeScale = 0f;
+        GameOverUI.SetActive(true);
     }
 
     // Periodic update, run forever
@@ -94,7 +134,7 @@ public class Clyde : MonoBehaviour
         while (true)
         {
             fsm.Update();
-            yield return new WaitForSeconds(reactionTime);
+            yield return new WaitForSeconds(PlayerController.reactionTime);
         }
     }
 
@@ -104,7 +144,7 @@ public class Clyde : MonoBehaviour
     {
         // I check for the powerup to be collected, if one is missing fire transition
         int count = 0;
-        foreach (GameObject go in GameObject.FindGameObjectsWithTag(poweruptag))
+        foreach (GameObject go in GameObject.FindGameObjectsWithTag(PlayerController.poweruptag))
         {
             if (go.activeSelf)
             { //count how many powerups are still active
@@ -118,8 +158,8 @@ public class Clyde : MonoBehaviour
         }
         else
         { // one has been collected
-            totalActivePowerUps--; //update current active powerups
             print("power up collected, state transition to flee");
+            totalActivePowerUps--;
             if (coroutine != null)
                 StopCoroutine(coroutine);
             coroutine = null;
@@ -130,7 +170,7 @@ public class Clyde : MonoBehaviour
     public bool Timer()
     {
         //print("condizione verificata, torno a stato chase");
-        timeLeft -= (Time.deltaTime + reactionTime);
+        timeLeft -= (Time.deltaTime + PlayerController.reactionTime);
         print(timeLeft);
         if (timeLeft < 0)
         {
@@ -174,7 +214,7 @@ public class Clyde : MonoBehaviour
             // Follows pacman keeping staying always at least 8 units away from him,
             // I need a coroutine that always check for the distance from Clyde to pacman to be minimum 8 units, otherwise stops clyde
             GetComponent<NavMeshAgent>().destination = destination.position;
-            yield return new WaitForSeconds(resampleTime);
+            yield return new WaitForSeconds(PlayerController.resampleTime);
         }
     }
     private IEnumerator GoFlee()
@@ -184,7 +224,7 @@ public class Clyde : MonoBehaviour
             Vector3 nextWaypointPosition = waypoints[nextWaypointIndex].position;
             GetComponent<NavMeshAgent>().destination = nextWaypointPosition;
             CycleWaypointWhenClose(nextWaypointPosition);
-            yield return new WaitForSeconds(fleeResampleTime);
+            yield return new WaitForSeconds(PlayerController.fleeResampleTime);
         }
     }
 
@@ -232,7 +272,7 @@ public class Clyde : MonoBehaviour
         activePowerUp = true;
         coroutine = GoFlee();
         StartCoroutine(coroutine); //Blinky Beahvior when fleeing, top right corner patrol
-        timeLeft = powerUpDuration; //powerup 20 seconds
+        timeLeft = PlayerController.powerUpDuration; //powerup 20 seconds
     }
 
     public void ClydeRun()
