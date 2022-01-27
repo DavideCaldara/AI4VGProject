@@ -5,7 +5,6 @@
  * the maze (red dots path)
 */
 
-
 using System.Collections;
 using UnityEngine.AI;
 using UnityEngine;
@@ -14,13 +13,12 @@ using UnityEngine;
 
 public class Blinky : MonoBehaviour
 {
-
     private FSM fsm;
     public Transform destination;
     
     private IEnumerator coroutine;
 
-    Transform[] waypoints = new Transform[6];
+    Transform[] waypoints = new Transform[6]; // Waypoints path management
     public float waypointTolerance = 1f;
     System.Random random = new System.Random();
     int nextWaypointIndex;
@@ -30,10 +28,10 @@ public class Blinky : MonoBehaviour
     NavMeshAgent agent;
     private float speedCap = 5f;
 
-    private float nextActionTime = 0.0f;
+    private float nextActionTime = 0.0f; // for mesh color changing effect
     private float period = 0.3f;
 
-    private bool activePowerUp;
+    private bool activePowerUp; // powerup collection management
     private int totalActivePowerUps = 4;
 
     Color temp;
@@ -71,27 +69,26 @@ public class Blinky : MonoBehaviour
             i++;
         }
 
-        nextWaypointIndex = random.Next(6);
+        nextWaypointIndex = random.Next(6); // Start my flee route from a random waypoint
 
         //Blinky increase gradualy his speed during game execution until speed cap
         agent = GetComponent<NavMeshAgent>();
-        StartCoroutine("IncreaseSpeedPerSecond", 1f); //SpeedUp coroutine
+        StartCoroutine("IncreaseSpeedPerSecond", 1f); // SpeedUp coroutine
 
-        temp = GetComponent<Renderer>().material.color;
+        temp = GetComponent<Renderer>().material.color; // Save base color
 
         activePowerUp = false;
 
     }
 
 
-
     private void Update()
     {
-        if (Time.time > nextActionTime) {
+        if (Time.time > nextActionTime) { 
 
             nextActionTime += period;
             
-            if (activePowerUp) // alarm effect on ghosts
+            if (activePowerUp) // alarm effect on ghosts when powerup is active
             {
                 if (GetComponent<Renderer>().material.color == temp)
                     GetComponent<Renderer>().material.SetColor("_Color", Color.blue);
@@ -103,17 +100,15 @@ public class Blinky : MonoBehaviour
                 GetComponent<Renderer>().material.SetColor("_Color", temp);
             }
         }
-
-        
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if(other.tag == "Player" && activePowerUp)
+        if(other.tag == "Player" && activePowerUp) // Eating ghost
         {
             this.gameObject.SetActive(false);
         }
-        if (other.tag == "Player" && !activePowerUp)
+        if (other.tag == "Player" && !activePowerUp) // GameOver
         {
             GameOver();
         }
@@ -121,11 +116,11 @@ public class Blinky : MonoBehaviour
 
     private void GameOver()
     {
-        Time.timeScale = 0f;
+        Time.timeScale = 0f; // pause the game show panel
         GameOverUI.SetActive(true);
     }
 
-    // Periodic update of the FSM, runs forever
+    // Periodic update of the FSM
     public IEnumerator Patrol()
     {
         while (true)
@@ -176,7 +171,7 @@ public class Blinky : MonoBehaviour
 
 
     // Behaviors Coroutines
-    private IEnumerator GoChase()
+    private IEnumerator GoChase() // chasing player state
     {
         while (true)
         {
@@ -184,7 +179,7 @@ public class Blinky : MonoBehaviour
             yield return new WaitForSeconds(PlayerController.resampleTime);
         }
     }
-    private IEnumerator GoFlee()
+    private IEnumerator GoFlee() // run toward labyrinth angle
     {
         while (true)
         {
@@ -195,7 +190,7 @@ public class Blinky : MonoBehaviour
         }
     }
 
-    private void CycleWaypointWhenClose(Vector3 nextWaypointPosition)
+    private void CycleWaypointWhenClose(Vector3 nextWaypointPosition) // scan the vector for the next waypoint
     {
         if (Vector3.Distance(transform.position, nextWaypointPosition) <= waypointTolerance)
         {
@@ -205,14 +200,14 @@ public class Blinky : MonoBehaviour
         }
     }
 
-    private IEnumerator IncreaseSpeedPerSecond(float waitTime)
+    private IEnumerator IncreaseSpeedPerSecond(float waitTime) // increase blinky speed overtime during execution
     {
-        //while agent's speed is less than the speedCap
+        // while agent's speed is less than the speedCap
         while (agent.speed < speedCap)
         {
-            //wait "waitTime"
+            // wait "waitTime"
             yield return new WaitForSeconds(waitTime);
-            //add 0.01f to currentSpeed every loop 
+            // add 0.01f to currentSpeed every loop 
             agent.speed += 0.01f;
         }
     }
@@ -221,7 +216,6 @@ public class Blinky : MonoBehaviour
 
     public void BlinkyChase()
     {
-        //Blinky behavior, chase pacman directly
         print("entrato stato blinkchase");
         activePowerUp = false;
         coroutine = GoChase();
@@ -233,7 +227,7 @@ public class Blinky : MonoBehaviour
         print("entrato stato blinkflee");
         activePowerUp = true;
         coroutine = GoFlee();
-        StartCoroutine(coroutine); //Blinky Beahvior when fleeing, top right corner patrol
-        timeLeft = PlayerController.powerUpDuration; //powerup 20 seconds
+        StartCoroutine(coroutine);
+        timeLeft = PlayerController.powerUpDuration; // powerup 20 seconds
     }    
 }

@@ -18,7 +18,7 @@ public class Pinky : MonoBehaviour
 
     private IEnumerator coroutine;
 
-    Transform[] waypoints = new Transform[7];
+    Transform[] waypoints = new Transform[7]; // Waypoints path management
     public float waypointTolerance = 1f;
     System.Random random = new System.Random();
     int nextWaypointIndex;
@@ -27,17 +27,19 @@ public class Pinky : MonoBehaviour
 
     Color temp;
 
-    private float nextActionTime = 0.0f;
+    private float nextActionTime = 0.0f; // for mesh color changing effect
     private float period = 0.3f;
 
     [SerializeField] private GameObject GameOverUI;
 
-    private bool activePowerUp;
+    private bool activePowerUp; // powerup collection management
     private int totalActivePowerUps = 4;
 
 
     void Start()
     {
+        // Define FSM
+        // Define States
         FSMState chase = new FSMState();
         chase.enterActions.Add(PinkyChase);
 
@@ -66,9 +68,9 @@ public class Pinky : MonoBehaviour
             i++;
         }
 
-        nextWaypointIndex  = random.Next(7);
+        nextWaypointIndex  = random.Next(7); // Start my flee route from a random waypoint
 
-        temp = GetComponent<Renderer>().material.color;
+        temp = GetComponent<Renderer>().material.color; // Save base color
 
         activePowerUp = false;
     }
@@ -79,7 +81,7 @@ public class Pinky : MonoBehaviour
         {
             nextActionTime += period;
 
-            if (activePowerUp) // alarm effect
+            if (activePowerUp) // alarm effect on ghosts when powerup is active
             {
                 if (GetComponent<Renderer>().material.color == temp)
                     GetComponent<Renderer>().material.SetColor("_Color", Color.blue);
@@ -95,11 +97,11 @@ public class Pinky : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.tag == "Player" && activePowerUp)
+        if (other.tag == "Player" && activePowerUp) // Eating ghost
         {
             this.gameObject.SetActive(false);
         }
-        if (other.tag == "Player" && !activePowerUp)
+        if (other.tag == "Player" && !activePowerUp) // GameOver
         {
             GameOver();
         }
@@ -107,11 +109,11 @@ public class Pinky : MonoBehaviour
 
     private void GameOver()
     {
-        Time.timeScale = 0f;
+        Time.timeScale = 0f; // pause the game show panel
         GameOverUI.SetActive(true);
     }
 
-    // Periodic update, run forever
+    // Periodic update FSM
     public IEnumerator Patrol()
     {
         while (true)
@@ -120,10 +122,11 @@ public class Pinky : MonoBehaviour
             yield return new WaitForSeconds(PlayerController.reactionTime);
         }
     }
-    
-    
+
+
     // CONDITIONS
 
+    // If a powerUp has been collected I fire the transition to flee State
     public bool PowerUp()
     {
         // I check for the powerup to be collected, if one is missing fire transition
@@ -131,12 +134,12 @@ public class Pinky : MonoBehaviour
         foreach (GameObject go in GameObject.FindGameObjectsWithTag(PlayerController.poweruptag))
         {
             if (go.activeSelf)
-            { //count how many powerups are still active
+            { // count how many powerups are still active
                 count++;
             }
         }
         if (totalActivePowerUps == count)
-        { //stay in chase state 
+        { // stay in chase state 
             print("no powers up collected, keep chasing");
             return false;
         }
@@ -144,13 +147,13 @@ public class Pinky : MonoBehaviour
         { // one has been collected
             print("power up collected, state transition to flee");
             totalActivePowerUps--;
-
             StopCoroutine(coroutine);
             coroutine = null;
             return true;
         }
     }
 
+    // After 30 seconds I fire the transition to Chase state
     public bool Timer()
     {
         //print("condizione verificata, torno a stato chase");
@@ -214,7 +217,7 @@ public class Pinky : MonoBehaviour
         print("entrato stato clydeflee");
         activePowerUp = true;
         coroutine = GoFlee();
-        StartCoroutine(coroutine); //Blinky Beahvior when fleeing, top right corner patrol
+        StartCoroutine(coroutine); 
         timeLeft = PlayerController.powerUpDuration; //powerup 20 seconds
     }
 

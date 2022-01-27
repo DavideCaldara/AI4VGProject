@@ -19,7 +19,7 @@ public class Clyde : MonoBehaviour
     
     private IEnumerator coroutine;
 
-    Transform[] waypoints = new Transform[6];
+    Transform[] waypoints = new Transform[6]; // Waypoints path management
     public float waypointTolerance = 1f;
     System.Random random = new System.Random();
     int nextWaypointIndex;
@@ -32,10 +32,10 @@ public class Clyde : MonoBehaviour
 
     NavMeshAgent agent;
 
-    private float nextActionTime = 0.0f;
+    private float nextActionTime = 0.0f; // for mesh color changing effect
     private float period = 0.3f;
 
-    private bool activePowerUp;
+    private bool activePowerUp; // powerup collection management
     private int totalActivePowerUps = 4;
 
     Color temp;
@@ -44,6 +44,8 @@ public class Clyde : MonoBehaviour
 
     void Start()
     {
+        // Define FSM
+        // Define States
         FSMState chase = new FSMState();
         chase.enterActions.Add(ClydeChase);
 
@@ -80,11 +82,10 @@ public class Clyde : MonoBehaviour
             i++;
         }
 
-
-        nextWaypointIndex = random.Next(6);
+        nextWaypointIndex = random.Next(6); // Start my flee route from a random waypoint
         agent = GetComponent<NavMeshAgent>();
 
-        temp = GetComponent<Renderer>().material.color;
+        temp = GetComponent<Renderer>().material.color; // Save base color
 
         activePowerUp = false;
 
@@ -96,7 +97,7 @@ public class Clyde : MonoBehaviour
         {
             nextActionTime += period;
 
-            if (activePowerUp) // alarm effect
+            if (activePowerUp) // alarm effect on ghosts when powerup is active
             {
                 if (GetComponent<Renderer>().material.color == temp)
                     GetComponent<Renderer>().material.SetColor("_Color", Color.blue);
@@ -112,11 +113,11 @@ public class Clyde : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.tag == "Player" && activePowerUp)
+        if (other.tag == "Player" && activePowerUp) // Eating ghost
         {
             this.gameObject.SetActive(false);
         }
-        if (other.tag == "Player" && !activePowerUp)
+        if (other.tag == "Player" && !activePowerUp) // GameOver
         {
             GameOver();
         }
@@ -124,11 +125,11 @@ public class Clyde : MonoBehaviour
 
     private void GameOver()
     {
-        Time.timeScale = 0f;
+        Time.timeScale = 0f; // pause the game show panel
         GameOverUI.SetActive(true);
     }
 
-    // Periodic update, run forever
+    // Periodic update FSM
     public IEnumerator Patrol()
     {
         while (true)
@@ -138,21 +139,22 @@ public class Clyde : MonoBehaviour
         }
     }
 
+
     // CONDITIONS
 
+    // If a powerUp has been collected I fire the transition to flee State
     public bool PowerUp()
     {
         // I check for the powerup to be collected, if one is missing fire transition
         int count = 0;
         foreach (GameObject go in GameObject.FindGameObjectsWithTag(PlayerController.poweruptag))
         {
-            if (go.activeSelf)
-            { //count how many powerups are still active
+            if (go.activeSelf) { //count how many powerups are still active
                 count++;
             }
         }
         if (totalActivePowerUps == count)
-        { //stay in chase state 
+        { // stay in chase state 
             print("no powers up collected, keep chasing");
             return false;
         }
@@ -167,6 +169,7 @@ public class Clyde : MonoBehaviour
         }
     }
 
+    // After 30 seconds I fire the transition to Chase state
     public bool Timer()
     {
         //print("condizione verificata, torno a stato chase");
@@ -181,7 +184,7 @@ public class Clyde : MonoBehaviour
         return false;
     }
 
-    public bool TooClose()
+    public bool TooClose() // when i am too close to the player transition to run state
     {
         //print(Vector3.Distance(transform.position, GameObject.Find("Player").transform.position));
         if (Vector3.Distance(transform.position, GameObject.Find("PacMan").transform.position) < maxDistance)
@@ -193,7 +196,7 @@ public class Clyde : MonoBehaviour
         return false;
     }
 
-    public bool FarEnough()
+    public bool FarEnough() // when i am far enough i can go back chasing the player
     {
         if (Vector3.Distance(transform.position, GameObject.Find("PacMan").transform.position) > maxDistance)
         {
@@ -217,7 +220,7 @@ public class Clyde : MonoBehaviour
             yield return new WaitForSeconds(PlayerController.resampleTime);
         }
     }
-    private IEnumerator GoFlee()
+    private IEnumerator GoFlee() // run toward labyrinth angle
     {
         while (true)
         {
@@ -228,7 +231,7 @@ public class Clyde : MonoBehaviour
         }
     }
 
-    private IEnumerator GoRun()
+    private IEnumerator GoRun() // run away from the player
     {
         while (true)
         {
@@ -245,7 +248,7 @@ public class Clyde : MonoBehaviour
     }
 
 
-    private void CycleWaypointWhenClose(Vector3 nextWaypointPosition)
+    private void CycleWaypointWhenClose(Vector3 nextWaypointPosition) // scan the vector for the next waypoint
     {
         if (Vector3.Distance(transform.position, nextWaypointPosition) <= waypointTolerance)
         {
@@ -271,7 +274,7 @@ public class Clyde : MonoBehaviour
         print("entrato stato clydeflee");
         activePowerUp = true;
         coroutine = GoFlee();
-        StartCoroutine(coroutine); //Blinky Beahvior when fleeing, top right corner patrol
+        StartCoroutine(coroutine);
         timeLeft = PlayerController.powerUpDuration; //powerup 20 seconds
     }
 

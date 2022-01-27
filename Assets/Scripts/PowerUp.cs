@@ -13,13 +13,13 @@ public class PowerUp : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //rotate power up
+        // rotate power up
         transform.Rotate(Vector3.up, 1f, Space.World);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        //if i collide with player deactivate me and launch flee status for 20 seconds
+        // if i collide with player deactivate me and launch flee status for 20 seconds
         if (other.gameObject.tag == "Player")
         {
             this.gameObject.SetActive(false);
