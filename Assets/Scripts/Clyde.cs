@@ -220,7 +220,7 @@ public class Clyde : MonoBehaviour
             yield return new WaitForSeconds(PlayerController.resampleTime);
         }
     }
-    private IEnumerator GoFlee() // run toward labyrinth angle
+    private IEnumerator GoFlee() // run toward labyrinth corner
     {
         while (true)
         {
@@ -263,7 +263,7 @@ public class Clyde : MonoBehaviour
 
     public void ClydeChase()
     {
-        print("entrato stato clydechase");
+        print("entered clydechase state");
         activePowerUp = false;
         coroutine = GoChase();
         StartCoroutine(coroutine);
@@ -271,7 +271,7 @@ public class Clyde : MonoBehaviour
 
     public void ClydeFlee()
     {
-        print("entrato stato clydeflee");
+        print("entered clydeflee state");
         activePowerUp = true;
         coroutine = GoFlee();
         StartCoroutine(coroutine);
@@ -280,7 +280,7 @@ public class Clyde : MonoBehaviour
 
     public void ClydeRun()
     {
-        print("entrato stato clyderun");
+        print("entered clyderun state");
         coroutine = GoRun();
         StartCoroutine(coroutine);
     }

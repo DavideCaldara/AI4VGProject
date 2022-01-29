@@ -228,7 +228,7 @@ public class Inky : MonoBehaviour
     public void InkyChase()
     {
         //Clyde behavior, 
-        print("entrato stato clydechase");
+        print("entered clydechase state");
         activePowerUp = false;
         coroutine = GoChase();
         StartCoroutine(coroutine);
@@ -236,7 +236,7 @@ public class Inky : MonoBehaviour
 
     public void InkyFlee()
     {
-        print("entrato stato clydeflee");
+        print("entered clydeflee state");
         activePowerUp = true;
         coroutine = GoFlee();
         StartCoroutine(coroutine);

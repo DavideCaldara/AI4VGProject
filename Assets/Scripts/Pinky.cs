@@ -206,7 +206,7 @@ public class Pinky : MonoBehaviour
     public void PinkyChase()
     {
         //Clyde behavior, 
-        print("entrato stato clydechase");
+        print("entered clydechase state");
         activePowerUp = false;
         coroutine = GoChase();
         StartCoroutine(coroutine);
@@ -214,7 +214,7 @@ public class Pinky : MonoBehaviour
 
     public void PinkyFlee()
     {
-        print("entrato stato clydeflee");
+        print("entered clydeflee state");
         activePowerUp = true;
         coroutine = GoFlee();
         StartCoroutine(coroutine); 

@@ -179,7 +179,7 @@ public class Blinky : MonoBehaviour
             yield return new WaitForSeconds(PlayerController.resampleTime);
         }
     }
-    private IEnumerator GoFlee() // run toward labyrinth angle
+    private IEnumerator GoFlee() // run toward labyrinth corner
     {
         while (true)
         {
@@ -216,7 +216,7 @@ public class Blinky : MonoBehaviour
 
     public void BlinkyChase()
     {
-        print("entrato stato blinkchase");
+        print("entered blinkchase state");
         activePowerUp = false;
         coroutine = GoChase();
         StartCoroutine(coroutine); 
@@ -224,7 +224,7 @@ public class Blinky : MonoBehaviour
 
     public void BlinkyFlee()
     {
-        print("entrato stato blinkflee");
+        print("entered blinkflee state");
         activePowerUp = true;
         coroutine = GoFlee();
         StartCoroutine(coroutine);
